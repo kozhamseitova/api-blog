@@ -1,0 +1,14 @@
+http:
+  port: '8080'
+  timeout: '30s'
+  shutdown_timeout: '15s'
+  read_timeout: '15s'
+  write_timeout: '60s'
+
+db:
+  host: 'localhost'
+  port: '5432'
+  db_name: 'blog_db'
+  username: 'postgres'
+#  max_conn: 10
+#  max_idle_conn: 2
