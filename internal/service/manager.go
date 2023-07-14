@@ -10,7 +10,7 @@ type Manager struct {
 	Config     *config.Config
 }
 
-func New(repository repository.Repository, config config.Config) *Manager {
+func New(repository repository.Repository, config *config.Config) *Manager {
 	return &Manager{
 		Repository: repository,
 		Config:     config,
