@@ -36,3 +36,30 @@ func (h *Handler) createUser(ctx *gin.Context) {
 
 	ctx.Status(http.StatusCreated)
 }
+
+func (h *Handler) loginUser(ctx *gin.Context) {
+	var req entity.UserLogin
+
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		log.Printf("bind json err: %s \n", err.Error())
+		ctx.JSON(http.StatusBadRequest, &Error{
+			Code:    -1,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	token, err := h.srvs.Login(ctx, req.Username, req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, &Error{
+			Code:    -2,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"token": token,
+	})
+}

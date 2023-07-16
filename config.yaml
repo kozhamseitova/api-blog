@@ -1,5 +1,5 @@
 http:
-  port: '8080'
+  port: ':8000'
   timeout: '30s'
   shutdown_timeout: '15s'
   read_timeout: '15s'
@@ -10,5 +10,6 @@ db:
   port: '5432'
   db_name: 'blog_db'
   username: 'postgres'
+  password: 'password'
 #  max_conn: 10
 #  max_idle_conn: 2

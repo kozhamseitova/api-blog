@@ -8,6 +8,7 @@ func (h *Handler) InitRouter() *gin.Engine {
 	apiV1 := router.Group("/api/v1")
 
 	apiV1.POST("/user-register", h.createUser)
+	apiV1.POST("/user-login", h.loginUser)
 
 	return router
 }

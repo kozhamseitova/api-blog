@@ -7,7 +7,10 @@ import (
 	"net/url"
 )
 
-const usersTable = "users"
+const (
+	usersTable    = "users"
+	articlesTable = "articles"
+)
 
 type Postgres struct {
 	host     string
