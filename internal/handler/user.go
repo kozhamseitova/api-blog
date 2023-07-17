@@ -63,3 +63,57 @@ func (h *Handler) loginUser(ctx *gin.Context) {
 		"token": token,
 	})
 }
+
+func (h *Handler) updateUser(ctx *gin.Context) {
+	var req entity.User
+
+	err := ctx.ShouldBindJSON(&req)
+	if err != nil {
+		log.Printf("bind json err: %s \n", err.Error())
+		ctx.JSON(http.StatusBadRequest, &Error{
+			Code:    -1,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	err = h.srvs.UpdateUser(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, &Error{
+			Code:    -2,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"message": "successfully updated",
+	})
+}
+
+func (h *Handler) deleteUser(ctx *gin.Context) {
+	var id int64
+
+	err := ctx.ShouldBindJSON(&id)
+	if err != nil {
+		log.Printf("bind json err: %s \n", err.Error())
+		ctx.JSON(http.StatusBadRequest, &Error{
+			Code:    -1,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	err = h.srvs.DeleteUser(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, &Error{
+			Code:    -2,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, map[string]interface{}{
+		"message": "successfully deleted",
+	})
+}

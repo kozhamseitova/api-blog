@@ -4,6 +4,7 @@ import (
 	"api-blog/internal/entity"
 	"api-blog/pkg/util"
 	"context"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -70,8 +71,26 @@ func (m *Manager) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (m *Manager) VerifyToken(token string) error {
-	return nil
+func (m *Manager) ParseToken(accessToken string) (int64, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return 0, fmt.Errorf("invalid signing method")
+		}
+
+		return []byte(signingKey), nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(*tokenClaims)
+
+	if !ok {
+		return 0, fmt.Errorf("token claims are not of type *tokenClaims")
+	}
+
+	return claims.UserId, nil
 }
 
 func generateToken(id int64) (string, error) {

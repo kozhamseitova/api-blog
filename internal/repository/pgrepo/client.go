@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	usersTable    = "users"
-	articlesTable = "articles"
+	usersTable              = "users"
+	articlesTable           = "articles"
+	articlesCategoriesTable = "articles_categories"
 )
 
 type Postgres struct {
