@@ -10,6 +10,5 @@ db:
   port: '5432'
   db_name: 'blog_db'
   username: 'postgres'
-  password: 'password'
 #  max_conn: 10
 #  max_idle_conn: 2
