@@ -11,6 +11,7 @@ const (
 	usersTable              = "users"
 	articlesTable           = "articles"
 	articlesCategoriesTable = "articles_categories"
+	categoriesTable         = "categories"
 )
 
 type Postgres struct {

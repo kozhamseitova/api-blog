@@ -19,7 +19,7 @@ func (h *Handler) createUser(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
 		ctx.JSON(http.StatusBadRequest, &Error{
-			Code:    -1,
+			Code:    http.StatusBadRequest,
 			Message: err.Error(),
 		})
 		return
@@ -28,7 +28,7 @@ func (h *Handler) createUser(ctx *gin.Context) {
 	err = h.srvs.CreateUser(ctx, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, &Error{
-			Code:    -2,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
@@ -44,7 +44,7 @@ func (h *Handler) loginUser(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
 		ctx.JSON(http.StatusBadRequest, &Error{
-			Code:    -1,
+			Code:    http.StatusBadRequest,
 			Message: err.Error(),
 		})
 		return
@@ -53,13 +53,13 @@ func (h *Handler) loginUser(ctx *gin.Context) {
 	token, err := h.srvs.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, &Error{
-			Code:    -2,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, map[string]interface{}{
+	ctx.JSON(http.StatusOK, gin.H{
 		"token": token,
 	})
 }
@@ -71,49 +71,57 @@ func (h *Handler) updateUser(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
 		ctx.JSON(http.StatusBadRequest, &Error{
-			Code:    -1,
+			Code:    http.StatusBadRequest,
 			Message: err.Error(),
 		})
 		return
 	}
+
+	userId, ok := ctx.Get(userCtx)
+	if !ok {
+		ctx.JSON(http.StatusForbidden, &Error{
+			Code:    http.StatusForbidden,
+			Message: "user not found",
+		})
+		return
+	}
+
+	req.ID = userId.(int64)
 
 	err = h.srvs.UpdateUser(ctx, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, &Error{
-			Code:    -2,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, map[string]interface{}{
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "successfully updated",
 	})
 }
 
 func (h *Handler) deleteUser(ctx *gin.Context) {
-	var id int64
-
-	err := ctx.ShouldBindJSON(&id)
-	if err != nil {
-		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, &Error{
-			Code:    -1,
-			Message: err.Error(),
+	id, ok := ctx.Get(userCtx)
+	if !ok {
+		ctx.JSON(http.StatusForbidden, &Error{
+			Code:    http.StatusForbidden,
+			Message: "user not found",
 		})
 		return
 	}
 
-	err = h.srvs.DeleteUser(ctx, id)
+	err := h.srvs.DeleteUser(ctx, id.(int64))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, &Error{
-			Code:    -2,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, map[string]interface{}{
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "successfully deleted",
 	})
 }

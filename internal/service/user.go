@@ -34,7 +34,7 @@ func (m *Manager) CreateUser(ctx context.Context, u *entity.User) error {
 }
 
 func (m *Manager) Login(ctx context.Context, username, password string) (string, error) {
-	user, err := m.Repository.Login(ctx, username, password)
+	user, err := m.Repository.GetUserByUsernameAndPassword(ctx, username, password)
 	if err != nil {
 		return "", err
 	}

@@ -17,6 +17,21 @@ func (h *Handler) InitRouter() *gin.Engine {
 		{
 			users.PUT("/", h.updateUser)
 			users.DELETE("/", h.deleteUser)
+			users.GET("/:user_id/articles", h.getArticleByUserId)
+		}
+
+		articles := apiV1.Group("/articles")
+		{
+			articles.POST("/", h.createArticle)
+			articles.GET("/", h.getAllArticles)
+			articles.PUT("/:id", h.updateArticle)
+			articles.DELETE("/:id", h.deleteArticle)
+			articles.GET("/:id", h.getArticleById)
+		}
+
+		categories := apiV1.Group("/categories")
+		{
+			categories.GET("/", h.getAllCategories)
 		}
 
 	}

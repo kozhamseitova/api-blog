@@ -25,7 +25,7 @@ func (p *Postgres) CreateUser(ctx context.Context, u *entity.User) error {
 	return nil
 }
 
-func (p *Postgres) Login(ctx context.Context, username, password string) (entity.User, error) {
+func (p *Postgres) GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error) {
 	query := fmt.Sprintf(`
 		SELECT * FROM %s WHERE
 			username = $1 
