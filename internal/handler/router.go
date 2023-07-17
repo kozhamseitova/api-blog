@@ -24,7 +24,7 @@ func (h *Handler) InitRouter() *gin.Engine {
 		{
 			articles.POST("/", h.createArticle)
 			articles.GET("/", h.getAllArticles)
-			articles.PUT("/:id", h.updateArticle)
+			articles.PUT("/", h.updateArticle)
 			articles.DELETE("/:id", h.deleteArticle)
 			articles.GET("/:id", h.getArticleById)
 		}

@@ -45,18 +45,9 @@ func (h *Handler) createArticle(ctx *gin.Context) {
 }
 
 func (h *Handler) updateArticle(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, &Error{
-			Code:    http.StatusBadRequest,
-			Message: "invalid id param",
-		})
-		return
-	}
-
 	var req entity.Article
 
-	err = ctx.ShouldBindJSON(&req)
+	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
 		ctx.JSON(http.StatusBadRequest, &Error{
@@ -66,7 +57,7 @@ func (h *Handler) updateArticle(ctx *gin.Context) {
 		return
 	}
 
-	req.ID = int64(id)
+	req.ID = int64(req.ID)
 
 	userId, ok := ctx.Get(userCtx)
 	if !ok {
