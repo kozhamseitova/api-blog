@@ -1,16 +1,12 @@
 package handler
 
 import (
+	"api-blog/api"
 	"api-blog/internal/entity"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
-
-type Error struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
 
 func (h *Handler) createUser(ctx *gin.Context) {
 	var req entity.User
@@ -18,7 +14,7 @@ func (h *Handler) createUser(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, &Error{
+		ctx.JSON(http.StatusBadRequest, &api.Error{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
 		})
@@ -27,7 +23,7 @@ func (h *Handler) createUser(ctx *gin.Context) {
 
 	err = h.srvs.CreateUser(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, &Error{
+		ctx.JSON(http.StatusInternalServerError, &api.Error{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
@@ -38,12 +34,12 @@ func (h *Handler) createUser(ctx *gin.Context) {
 }
 
 func (h *Handler) loginUser(ctx *gin.Context) {
-	var req entity.UserLogin
+	var req api.LoginRequest
 
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, &Error{
+		ctx.JSON(http.StatusBadRequest, &api.Error{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
 		})
@@ -52,15 +48,17 @@ func (h *Handler) loginUser(ctx *gin.Context) {
 
 	token, err := h.srvs.Login(ctx, req.Username, req.Password)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, &Error{
+		ctx.JSON(http.StatusInternalServerError, &api.Error{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"token": token,
+	ctx.JSON(http.StatusOK, &api.Ok{
+		Code:    0,
+		Message: "success",
+		Data:    token,
 	})
 }
 
@@ -70,58 +68,64 @@ func (h *Handler) updateUser(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
 		log.Printf("bind json err: %s \n", err.Error())
-		ctx.JSON(http.StatusBadRequest, &Error{
+		ctx.JSON(http.StatusBadRequest, &api.Error{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	userId, ok := ctx.Get(userCtx)
+	userId, ok := ctx.MustGet(userCtx).(int64)
 	if !ok {
-		ctx.JSON(http.StatusForbidden, &Error{
+		log.Printf("can't get userID")
+		ctx.JSON(http.StatusForbidden, &api.Error{
 			Code:    http.StatusForbidden,
-			Message: "user not found",
+			Message: "can't get userID from auth",
 		})
 		return
 	}
 
-	req.ID = userId.(int64)
+	req.ID = userId
 
 	err = h.srvs.UpdateUser(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, &Error{
+		ctx.JSON(http.StatusInternalServerError, &api.Error{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "successfully updated",
+	ctx.JSON(http.StatusOK, &api.Ok{
+		Code:    0,
+		Message: "successfully updated",
+		Data:    userId,
 	})
 }
 
 func (h *Handler) deleteUser(ctx *gin.Context) {
-	id, ok := ctx.Get(userCtx)
+	id, ok := ctx.MustGet(userCtx).(int64)
 	if !ok {
-		ctx.JSON(http.StatusForbidden, &Error{
+		log.Printf("can't get userID")
+		ctx.JSON(http.StatusForbidden, &api.Error{
 			Code:    http.StatusForbidden,
-			Message: "user not found",
+			Message: "can't get userID from auth",
 		})
 		return
 	}
 
-	err := h.srvs.DeleteUser(ctx, id.(int64))
+	err := h.srvs.DeleteUser(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, &Error{
+		ctx.JSON(http.StatusInternalServerError, &api.Error{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "successfully deleted",
+	ctx.JSON(http.StatusOK, &api.Ok{
+		Code:    0,
+		Message: "successfully deleted",
+		Data:    id,
 	})
 }

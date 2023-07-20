@@ -12,3 +12,6 @@ db:
   username: 'postgres'
 #  max_conn: 10
 #  max_idle_conn: 2
+
+token:
+  time_to_live: "15m"

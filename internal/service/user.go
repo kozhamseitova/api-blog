@@ -4,10 +4,10 @@ import (
 	"api-blog/internal/entity"
 	"api-blog/pkg/util"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 const signingKey = "kwjebr23oif99we"
@@ -36,71 +36,39 @@ func (m *Manager) CreateUser(ctx context.Context, u *entity.User) error {
 func (m *Manager) Login(ctx context.Context, username, password string) (string, error) {
 	user, err := m.Repository.GetUserByUsernameAndPassword(ctx, username, password)
 	if err != nil {
-		return "", err
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", fmt.Errorf("user not found")
+		}
+		return "", fmt.Errorf("get user err: %w", err)
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	err = util.CheckPassword(password, user.Password)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("incorrect password: %w", err)
 	}
 
-	token, err := generateToken(user.ID)
+	token, err := m.Token.CreateToken(user.ID, m.Config.Token.TimeToLive)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("create token err: %w", err)
 	}
 
 	return token, nil
 }
 
 func (m *Manager) UpdateUser(ctx context.Context, u *entity.User) error {
-	err := m.Repository.UpdateUser(ctx, u)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.Repository.UpdateUser(ctx, u)
 }
 
 func (m *Manager) DeleteUser(ctx context.Context, id int64) error {
-	err := m.Repository.DeleteUser(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.Repository.DeleteUser(ctx, id)
 }
 
-func (m *Manager) ParseToken(accessToken string) (int64, error) {
-	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return 0, fmt.Errorf("invalid signing method")
-		}
-
-		return []byte(signingKey), nil
-	})
-
+func (m *Manager) VerifyToken(token string) (int64, error) {
+	payload, err := m.Token.ValidateToken(token)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("validate token err: %w", err)
 	}
 
-	claims, ok := token.Claims.(*tokenClaims)
-
-	if !ok {
-		return 0, fmt.Errorf("token claims are not of type *tokenClaims")
-	}
-
-	return claims.UserId, nil
-}
-
-func generateToken(id int64) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(12 * time.Hour).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-		id,
-	})
-
-	return token.SignedString([]byte(signingKey))
+	return payload.UserId, nil
 }

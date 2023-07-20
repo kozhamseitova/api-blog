@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	HTTP ServerConfig `yaml:"http"`
-	DB   DBConfig     `yaml:"db"`
+	HTTP  ServerConfig `yaml:"http"`
+	DB    DBConfig     `yaml:"db"`
+	Token TokenConfig  `yaml:"token"`
 }
 
 type ServerConfig struct {
@@ -24,6 +25,11 @@ type DBConfig struct {
 	DBName   string `yaml:"db_name"`
 	Username string `yaml:"username"`
 	Password string `env:"DB_PASSWORD" env-required:"true"`
+}
+
+type TokenConfig struct {
+	SecretKey  string        `env:"TOKEN_SECRET_KEY" env-required:"true"`
+	TimeToLive time.Duration `yaml:"time_to_live"`
 }
 
 func InitConfig(path string) (*Config, error) {

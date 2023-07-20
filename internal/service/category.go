@@ -5,6 +5,6 @@ import (
 	"context"
 )
 
-func (m *Manager) GetCategories(ctx context.Context) ([]entity.Category, error) {
+func (m *Manager) GetCategories(ctx context.Context) ([]*entity.Category, error) {
 	return m.Repository.GetCategories(ctx)
 }

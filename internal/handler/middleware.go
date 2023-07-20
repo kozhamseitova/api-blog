@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"api-blog/api"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -14,27 +16,29 @@ const (
 func (h *Handler) userIdentity(c *gin.Context) {
 	header := c.GetHeader(authorizationHeader)
 	if header == " " {
-		c.JSON(http.StatusUnauthorized, &Error{
-			Code:    http.StatusUnauthorized,
-			Message: "empty auth header",
+		err := errors.New("authorization header is not set")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, &api.Error{
+			Code:    -1,
+			Message: err.Error(),
 		})
 		return
 	}
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
-		c.JSON(http.StatusUnauthorized, &Error{
-			Code:    http.StatusUnauthorized,
-			Message: "invalid auth header",
+		err := errors.New("authorization header incorrect format")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, &api.Error{
+			Code:    -2,
+			Message: err.Error(),
 		})
 		return
 	}
 
-	userId, err := h.srvs.ParseToken(headerParts[1])
+	userId, err := h.srvs.VerifyToken(headerParts[1])
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, &Error{
-			Code:    http.StatusUnauthorized,
-			Message: "token parse error",
+		c.AbortWithStatusJSON(http.StatusUnauthorized, &api.Error{
+			Code:    -3,
+			Message: err.Error(),
 		})
 		return
 	}

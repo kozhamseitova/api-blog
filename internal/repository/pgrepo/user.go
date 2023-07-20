@@ -4,6 +4,8 @@ import (
 	"api-blog/internal/entity"
 	"context"
 	"fmt"
+	"github.com/georgysavva/scany/pgxscan"
+	"strings"
 )
 
 func (p *Postgres) CreateUser(ctx context.Context, u *entity.User) error {
@@ -25,18 +27,22 @@ func (p *Postgres) CreateUser(ctx context.Context, u *entity.User) error {
 	return nil
 }
 
-func (p *Postgres) GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error) {
+func (p *Postgres) GetUserByUsernameAndPassword(ctx context.Context, username, password string) (*entity.User, error) {
+	user := new(entity.User)
+
 	query := fmt.Sprintf(`
 		SELECT * FROM %s WHERE
 			username = $1 
 			LIMIT 1
 	`, usersTable)
 
-	row := p.Pool.QueryRow(ctx, query, username)
+	err := pgxscan.Get(ctx, p.Pool, user, query, strings.TrimSpace(username))
 
-	var user entity.User
-	err := row.Scan(&user.ID, &user.Username, &user.Password, &user.FirstName, &user.LastName) // Adjust the fields as per your entity.User structure
-	return user, err
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (p *Postgres) UpdateUser(ctx context.Context, u *entity.User) error {
@@ -49,7 +55,7 @@ func (p *Postgres) UpdateUser(ctx context.Context, u *entity.User) error {
 
 	_, err := p.Pool.Exec(ctx, query, u.Username, u.FirstName, u.LastName, u.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("update user err: %w", err)
 	}
 
 	return nil
@@ -62,7 +68,7 @@ func (p *Postgres) DeleteUser(ctx context.Context, id int64) error {
 
 	_, err := p.Pool.Exec(ctx, query, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete user err: %w", err)
 	}
 
 	return nil

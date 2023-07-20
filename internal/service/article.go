@@ -27,14 +27,14 @@ func (m *Manager) DeleteArticle(ctx context.Context, id int64, userId int64) err
 	return m.Repository.DeleteArticleByID(ctx, id)
 }
 
-func (m *Manager) GetArticleByID(ctx context.Context, id int64) (entity.Article, error) {
+func (m *Manager) GetArticleByID(ctx context.Context, id int64) (*entity.Article, error) {
 	return m.Repository.GetArticleByID(ctx, id)
 }
 
-func (m *Manager) GetAllArticles(ctx context.Context) ([]entity.Article, error) {
+func (m *Manager) GetAllArticles(ctx context.Context) ([]*entity.Article, error) {
 	return m.Repository.GetAllArticles(ctx)
 }
 
-func (m *Manager) GetArticlesByUserID(ctx context.Context, userID int64) ([]entity.Article, error) {
+func (m *Manager) GetArticlesByUserID(ctx context.Context, userID int64) ([]*entity.Article, error) {
 	return m.Repository.GetArticlesByUserID(ctx, userID)
 }

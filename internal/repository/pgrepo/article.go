@@ -3,8 +3,8 @@ package pgrepo
 import (
 	"api-blog/internal/entity"
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/georgysavva/scany/pgxscan"
 )
 
 func (p *Postgres) CreateArticle(ctx context.Context, a *entity.Article) error {
@@ -22,7 +22,7 @@ func (p *Postgres) CreateArticle(ctx context.Context, a *entity.Article) error {
 	err = tx.QueryRow(ctx, queryFirst, a.Title, a.Description, a.UserID).Scan(&articleID)
 	if err != nil {
 		_ = tx.Rollback(ctx) // Rollback the transaction on error
-		return err
+		return fmt.Errorf("insert article query err: %w", err)
 	}
 
 	querySecond := fmt.Sprintf(`
@@ -33,13 +33,13 @@ func (p *Postgres) CreateArticle(ctx context.Context, a *entity.Article) error {
 		_, err = tx.Exec(ctx, querySecond, articleID, category.ID)
 		if err != nil {
 			_ = tx.Rollback(ctx) // Rollback the transaction on error
-			return err
+			return fmt.Errorf("insert article_categories query err: %w", err)
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("commit err: %w", err)
 	}
 
 	return nil
@@ -59,7 +59,7 @@ func (p *Postgres) UpdateArticle(ctx context.Context, a *entity.Article) error {
 
 	_, err = tx.Exec(ctx, updateArticleQuery, a.Title, a.Description, a.UserID, a.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("query first err: %w", err)
 	}
 
 	deleteCategoriesQuery := fmt.Sprintf(
@@ -68,7 +68,7 @@ func (p *Postgres) UpdateArticle(ctx context.Context, a *entity.Article) error {
 
 	_, err = tx.Exec(ctx, deleteCategoriesQuery, a.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete categories query err: %w", err)
 	}
 
 	insertCategoriesQuery := fmt.Sprintf(
@@ -77,14 +77,12 @@ func (p *Postgres) UpdateArticle(ctx context.Context, a *entity.Article) error {
 
 	for _, category := range a.Categories {
 		_, err = tx.Exec(ctx, insertCategoriesQuery, a.ID, category.ID)
-		if err != nil {
-			return err
-		}
+		return fmt.Errorf("insert categories query err: %w", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("commit err: %w", err)
 	}
 
 	return nil
@@ -103,7 +101,7 @@ func (p *Postgres) DeleteArticleByID(ctx context.Context, id int64) error {
 
 	_, err = tx.Exec(ctx, deleteCategoriesQuery, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete articles_categories query err: %w", err)
 	}
 
 	deleteArticleQuery := fmt.Sprintf(
@@ -112,19 +110,19 @@ func (p *Postgres) DeleteArticleByID(ctx context.Context, id int64) error {
 
 	_, err = tx.Exec(ctx, deleteArticleQuery, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete articles query err: %w", err)
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("commit err: %w", err)
 	}
 
 	return nil
 }
 
-func (p *Postgres) GetArticleByID(ctx context.Context, id int64) (entity.Article, error) {
-	var a entity.Article
+func (p *Postgres) GetArticleByID(ctx context.Context, id int64) (*entity.Article, error) {
+	article := new(entity.Article)
 
 	query := fmt.Sprintf(
 		`SELECT a.id, a.title, a.description, a.user_id, jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name)) as categories from %s a
@@ -133,37 +131,16 @@ func (p *Postgres) GetArticleByID(ctx context.Context, id int64) (entity.Article
 				where a.id = $1
 				group by a.user_id, a.id`, articlesTable, articlesCategoriesTable, categoriesTable)
 
-	row := p.Pool.QueryRow(ctx, query, id)
-
-	var categoriesData []byte
-
-	err := row.Scan(
-		&a.ID,
-		&a.Title,
-		&a.Description,
-		&a.UserID,
-		&categoriesData,
-	)
+	err := pgxscan.Get(ctx, p.Pool, article, query, id)
 
 	if err != nil {
-		return a, err
+		return article, err
 	}
 
-	var categories []*entity.Category
-	err = json.Unmarshal(categoriesData, &categories)
-	if err != nil {
-		return a, err
-	}
-	a.Categories = make([]entity.Category, len(categories))
-
-	for i, c := range categories {
-		a.Categories[i] = *c
-	}
-
-	return a, nil
+	return article, nil
 }
 
-func (p *Postgres) GetAllArticles(ctx context.Context) ([]entity.Article, error) {
+func (p *Postgres) GetAllArticles(ctx context.Context) ([]*entity.Article, error) {
 	query := fmt.Sprintf(`
 		SELECT a.id, a.title, a.description, a.user_id, jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name)) as categories 
 		FROM %s a
@@ -172,51 +149,20 @@ func (p *Postgres) GetAllArticles(ctx context.Context) ([]entity.Article, error)
 		GROUP BY a.user_id, a.id
 	`, articlesTable, articlesCategoriesTable, categoriesTable)
 
-	rows, err := p.Pool.Query(ctx, query)
+	var articles []*entity.Article
+
+	err := pgxscan.Select(ctx, p.Pool, &articles, query)
+
 	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var articles []entity.Article
-
-	for rows.Next() {
-		article := entity.Article{}
-		var categoriesData []byte
-
-		err := rows.Scan(
-			&article.ID,
-			&article.Title,
-			&article.Description,
-			&article.UserID,
-			&categoriesData,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		var categories []*entity.Category
-		err = json.Unmarshal(categoriesData, &categories)
-		if err != nil {
-			return nil, err
-		}
-
-		article.Categories = make([]entity.Category, len(categories))
-		for i, c := range categories {
-			article.Categories[i] = *c
-		}
-
-		articles = append(articles, article)
-	}
-
-	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
 	return articles, nil
 }
 
-func (p *Postgres) GetArticlesByUserID(ctx context.Context, userID int64) ([]entity.Article, error) {
+func (p *Postgres) GetArticlesByUserID(ctx context.Context, userID int64) ([]*entity.Article, error) {
+	var articles []*entity.Article
+
 	query := fmt.Sprintf(`
 		SELECT a.id, a.title, a.description, a.user_id, jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name)) as categories 
 		FROM %s a
@@ -226,44 +172,9 @@ func (p *Postgres) GetArticlesByUserID(ctx context.Context, userID int64) ([]ent
 		GROUP BY a.user_id, a.id
 	`, articlesTable, articlesCategoriesTable, categoriesTable)
 
-	rows, err := p.Pool.Query(ctx, query, userID)
+	err := pgxscan.Select(ctx, p.Pool, &articles, query, userID)
+
 	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var articles []entity.Article
-
-	for rows.Next() {
-		article := entity.Article{}
-		var categoriesData []byte
-
-		err := rows.Scan(
-			&article.ID,
-			&article.Title,
-			&article.Description,
-			&article.UserID,
-			&categoriesData,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		var categories []*entity.Category
-		err = json.Unmarshal(categoriesData, &categories)
-		if err != nil {
-			return nil, err
-		}
-
-		article.Categories = make([]entity.Category, len(categories))
-		for i, c := range categories {
-			article.Categories[i] = *c
-		}
-
-		articles = append(articles, article)
-	}
-
-	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -277,11 +188,10 @@ func (p *Postgres) GetUserIdByArticleId(ctx context.Context, articleId int64) (i
 		`SELECT user_id from %s 
 				WHERE id = $1`, articlesTable)
 
-	row := p.Pool.QueryRow(ctx, query, articleId)
+	err := pgxscan.Get(ctx, p.Pool, &userId, query, articleId)
 
-	err := row.Scan(&userId)
 	if err != nil {
-		return userId, err
+		return userId, fmt.Errorf("get user id by article id errror: %w", err)
 	}
 
 	return userId, nil

@@ -6,6 +6,7 @@ import (
 	"api-blog/internal/repository/pgrepo"
 	"api-blog/internal/service"
 	"api-blog/pkg/httpserver"
+	"api-blog/pkg/jwttoken"
 	"log"
 	"os"
 	"os/signal"
@@ -25,7 +26,8 @@ func Run(cfg *config.Config) error {
 	}
 	log.Println("connection success")
 
-	srvs := service.New(db, cfg)
+	token := jwttoken.New(cfg.Token.SecretKey)
+	srvs := service.New(db, cfg, token)
 	hndlr := handler.New(srvs)
 	server := httpserver.New(
 		hndlr.InitRouter(),

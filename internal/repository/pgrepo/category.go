@@ -4,28 +4,18 @@ import (
 	"api-blog/internal/entity"
 	"context"
 	"fmt"
+	"github.com/georgysavva/scany/pgxscan"
 )
 
-func (p *Postgres) GetCategories(ctx context.Context) ([]entity.Category, error) {
+func (p *Postgres) GetCategories(ctx context.Context) ([]*entity.Category, error) {
 	query := fmt.Sprintf(
 		`SELECT * from %s`, categoriesTable)
 
-	rows, err := p.Pool.Query(ctx, query)
+	var categories []*entity.Category
+
+	err := pgxscan.Select(ctx, p.Pool, &categories, query)
 	if err != nil {
 		return nil, err
-	}
-
-	var categories []entity.Category
-
-	for rows.Next() {
-		category := entity.Category{}
-
-		rows.Scan(
-			&category.ID,
-			&category.Name,
-		)
-
-		categories = append(categories, category)
 	}
 
 	return categories, nil
