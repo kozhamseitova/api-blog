@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"api-blog/api"
-	"api-blog/internal/entity"
 	"github.com/gin-gonic/gin"
+	"github.com/kozhamseitova/api-blog/api"
+	"github.com/kozhamseitova/api-blog/internal/entity"
 	"log"
 	"net/http"
 )

@@ -1,10 +1,10 @@
 package pgrepo
 
 import (
-	"api-blog/internal/entity"
 	"context"
 	"fmt"
 	"github.com/georgysavva/scany/pgxscan"
+	"github.com/kozhamseitova/api-blog/internal/entity"
 )
 
 func (p *Postgres) CreateArticle(ctx context.Context, a *entity.Article) error {

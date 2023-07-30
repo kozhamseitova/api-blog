@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"api-blog/internal/entity"
 	"context"
+	"github.com/kozhamseitova/api-blog/internal/entity"
 )
 
 type Repository interface {

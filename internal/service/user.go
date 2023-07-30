@@ -1,13 +1,13 @@
 package service
 
 import (
-	"api-blog/internal/entity"
-	"api-blog/pkg/util"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kozhamseitova/api-blog/internal/entity"
+	"github.com/kozhamseitova/api-blog/pkg/util"
 )
 
 const signingKey = "kwjebr23oif99we"

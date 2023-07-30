@@ -1,9 +1,9 @@
 package main
 
 import (
-	"api-blog/internal/app"
-	"api-blog/internal/config"
 	"fmt"
+	"github.com/kozhamseitova/api-blog/internal/app"
+	"github.com/kozhamseitova/api-blog/internal/config"
 )
 
 func main() {

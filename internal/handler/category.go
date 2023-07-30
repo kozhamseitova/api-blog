@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"api-blog/api"
 	"github.com/gin-gonic/gin"
+	"github.com/kozhamseitova/api-blog/api"
 	"net/http"
 )
 

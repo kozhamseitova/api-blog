@@ -1,9 +1,9 @@
 package service
 
 import (
-	"api-blog/internal/config"
-	"api-blog/internal/repository"
-	"api-blog/pkg/jwttoken"
+	"github.com/kozhamseitova/api-blog/internal/config"
+	"github.com/kozhamseitova/api-blog/internal/repository"
+	"github.com/kozhamseitova/api-blog/pkg/jwttoken"
 )
 
 type Manager struct {

@@ -1,12 +1,12 @@
 package app
 
 import (
-	"api-blog/internal/config"
-	"api-blog/internal/handler"
-	"api-blog/internal/repository/pgrepo"
-	"api-blog/internal/service"
-	"api-blog/pkg/httpserver"
-	"api-blog/pkg/jwttoken"
+	"github.com/kozhamseitova/api-blog/internal/config"
+	"github.com/kozhamseitova/api-blog/internal/handler"
+	"github.com/kozhamseitova/api-blog/internal/repository/pgrepo"
+	"github.com/kozhamseitova/api-blog/internal/service"
+	"github.com/kozhamseitova/api-blog/pkg/httpserver"
+	"github.com/kozhamseitova/api-blog/pkg/jwttoken"
 	"log"
 	"os"
 	"os/signal"

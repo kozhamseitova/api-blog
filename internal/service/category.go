@@ -1,8 +1,8 @@
 package service
 
 import (
-	"api-blog/internal/entity"
 	"context"
+	"github.com/kozhamseitova/api-blog/internal/entity"
 )
 
 func (m *Manager) GetCategories(ctx context.Context) ([]*entity.Category, error) {

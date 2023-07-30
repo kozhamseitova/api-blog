@@ -1,9 +1,9 @@
 package service
 
 import (
-	"api-blog/internal/entity"
 	"context"
 	"fmt"
+	"github.com/kozhamseitova/api-blog/internal/entity"
 )
 
 func (m *Manager) CreateArticle(ctx context.Context, a *entity.Article) error {

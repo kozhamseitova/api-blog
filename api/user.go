@@ -1,6 +1,6 @@
 package api
 
-import "api-blog/internal/entity"
+import "github.com/kozhamseitova/api-blog/internal/entity"
 
 type RegisterRequest struct {
 	entity.User

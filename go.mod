@@ -1,4 +1,4 @@
-module api-blog
+module github.com/kozhamseitova/api-blog
 
 go 1.20
 
