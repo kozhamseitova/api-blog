@@ -1,4 +1,4 @@
-package pgrepo
+package postgres
 
 type Option func(*Postgres)
 

@@ -1,17 +1,10 @@
-package pgrepo
+package postgres
 
 import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"net/url"
-)
-
-const (
-	usersTable              = "users"
-	articlesTable           = "articles"
-	articlesCategoriesTable = "articles_categories"
-	categoriesTable         = "categories"
 )
 
 type Postgres struct {

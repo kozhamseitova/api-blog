@@ -5,6 +5,7 @@ import (
 	"github.com/kozhamseitova/api-blog/internal/handler"
 	"github.com/kozhamseitova/api-blog/internal/repository/pgrepo"
 	"github.com/kozhamseitova/api-blog/internal/service"
+	"github.com/kozhamseitova/api-blog/pkg/client/postgres"
 	"github.com/kozhamseitova/api-blog/pkg/httpserver"
 	"github.com/kozhamseitova/api-blog/pkg/jwttoken"
 	"log"
@@ -13,13 +14,15 @@ import (
 )
 
 func Run(cfg *config.Config) error {
-	db, err := pgrepo.New(
-		pgrepo.WithHost(cfg.DB.Host),
-		pgrepo.WithPort(cfg.DB.Port),
-		pgrepo.WithDBName(cfg.DB.DBName),
-		pgrepo.WithUsername(cfg.DB.Username),
-		pgrepo.WithPassword(cfg.DB.Password),
+	conn, err := postgres.New(
+		postgres.WithHost(cfg.DB.Host),
+		postgres.WithPort(cfg.DB.Port),
+		postgres.WithDBName(cfg.DB.DBName),
+		postgres.WithUsername(cfg.DB.Username),
+		postgres.WithPassword(cfg.DB.Password),
 	)
+
+	db := pgrepo.New(conn.Pool)
 	if err != nil {
 		log.Printf("connection to DB err: %s", err.Error())
 		return err
